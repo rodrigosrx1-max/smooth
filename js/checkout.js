@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     log("tentando rolar");
 
-   const top = checkoutEl.getBoundingClientRect().top + window.pageYOffset;
+   const top = checkoutEl.offsetTop;
 
 window.scrollTo({
   top: top,
@@ -628,6 +628,7 @@ if (clearBtn) {
     updateUI();
   });
 }
+
 
 
 
