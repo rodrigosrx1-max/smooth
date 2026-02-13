@@ -80,10 +80,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     log("tentando rolar");
 
-    checkoutEl.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
+   const top = checkoutEl.getBoundingClientRect().top + window.pageYOffset;
+
+window.scrollTo({
+  top: top,
+  behavior: "smooth"
+});
+
   }
 
   // evento desktop/mobile
@@ -625,6 +628,7 @@ if (clearBtn) {
     updateUI();
   });
 }
+
 
 
 
