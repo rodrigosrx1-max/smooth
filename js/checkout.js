@@ -1,3 +1,26 @@
+// ======================
+// CONSOLE VISUAL MOBILE (TEMPORÁRIO)
+// ======================
+function log(msg){
+  const el = document.createElement("div");
+  el.style.position = "fixed";
+  el.style.bottom = "0";
+  el.style.left = "0";
+  el.style.right = "0";
+  el.style.background = "black";
+  el.style.color = "lime";
+  el.style.padding = "8px";
+  el.style.zIndex = "99999";
+  el.style.fontSize = "12px";
+  el.textContent = msg;
+  document.body.appendChild(el);
+}
+
+
+
+
+
+
 let miniCart, miniTotal, miniCount, mobileBtn;
 
 // ======================
@@ -47,38 +70,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const checkoutEl = document.getElementById('checkout');
   const miniScroll = document.getElementById('miniScroll');
 
-function scrollToCheckout(e){
-  e?.preventDefault();
-  e?.stopPropagation();
+  function scrollToCheckout(){
+    log("CLICOU");
 
-  if(!checkoutEl) return;
+    if(!checkoutEl){
+      log("checkout NULL");
+      return;
+    }
 
-  const headerOffset = 90;
+    log("tentando rolar");
 
-  const y = checkoutEl.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+    checkoutEl.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
 
-  document.documentElement.style.scrollBehavior = "auto";
-
-  window.scrollTo(0, y);
-
-  setTimeout(()=>{
-    document.documentElement.style.scrollBehavior = "";
-  }, 50);
-}
-
-
-
- miniScroll?.addEventListener('click', scrollToCheckout);
-mobileBtn?.addEventListener('click', scrollToCheckout);
-
-/* 🔴 FIX MOBILE REAL */
-mobileBtn?.addEventListener('touchend', scrollToCheckout);
-miniScroll?.addEventListener('touchend', scrollToCheckout);
-
-
+  // evento desktop/mobile
+  miniScroll?.addEventListener('click', scrollToCheckout);
+  mobileBtn?.addEventListener('click', scrollToCheckout);
 
 });
-
 
 
 // ======================
@@ -613,6 +625,7 @@ if (clearBtn) {
     updateUI();
   });
 }
+
 
 
 
