@@ -58,7 +58,7 @@ const clearBtn = document.getElementById("clearCart");
 
 
 // ======================
-// SCROLL PARA CHECKOUT (FIX MOBILE)
+// SCROLL PARA CHECKOUT — FIX REAL MOBILE
 // ======================
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -71,29 +71,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const miniScroll = document.getElementById('miniScroll');
 
   function scrollToCheckout(){
-    log("CLICOU");
 
-    if(!checkoutEl){
-      log("checkout NULL");
-      return;
-    }
+    if(!checkoutEl) return;
 
-    log("tentando rolar");
+    const top = checkoutEl.offsetTop;
 
-   const top = checkoutEl.offsetTop;
-
-window.scrollTo({
-  top: top,
-  behavior: "smooth"
-});
+    // 🔥 SCROLL NO ELEMENTO QUE REALMENTE ROLA
+    document.body.scrollTo({
+      top: top,
+      behavior: "smooth"
+    });
 
   }
 
-  // evento desktop/mobile
   miniScroll?.addEventListener('click', scrollToCheckout);
   mobileBtn?.addEventListener('click', scrollToCheckout);
 
 });
+
+
 
 
 // ======================
@@ -628,6 +624,7 @@ if (clearBtn) {
     updateUI();
   });
 }
+
 
 
 
