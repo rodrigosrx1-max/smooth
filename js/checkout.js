@@ -21,6 +21,7 @@ function log(msg){
 
 
 
+
 let miniCart, miniTotal, miniCount, mobileBtn;
 
 // ======================
@@ -91,7 +92,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-
 // ======================
 // ESTADO INICIAL FORÇADO (ANTI-BUG)
 // ======================
@@ -124,24 +124,24 @@ if (sentinel) {
     ([entry]) => {
       const hide = entry.isIntersecting;
 
-      // 🔴 NÃO mexe em opacity durante scroll
       if (miniCart) {
-        miniCart.style.display = hide ? 'none' : 'block';
+        miniCart.style.opacity = hide ? '0' : '1';
+        miniCart.style.pointerEvents = hide ? 'none' : 'auto';
       }
 
       if (mobileBtn) {
-        mobileBtn.style.display = hide ? 'none' : 'flex';
+        mobileBtn.style.opacity = hide ? '0' : '1';
       }
     },
     {
       root: null,
-      threshold: 0.1
+      threshold: 0,
+      rootMargin: '-0px 0px 0px 0px' // só quando chega de verdade
     }
   );
 
   observer.observe(sentinel);
 }
-
 
 
 
@@ -427,6 +427,22 @@ if (pay && pay.value === 'Dinheiro') {
   el?.addEventListener('input',validate);
 });
 
+
+
+// ======================
+// ESTADO INICIAL — MINI CART (FIX ZERO ITEMS)
+// ======================
+document.addEventListener("DOMContentLoaded", () => {
+  updateUI();
+
+  const mc = document.getElementById('miniCart');
+  const mb = document.getElementById('mobileBtn');
+
+  if (mc) mc.style.display = "none";
+  if (mb) mb.style.display = "none";
+});
+
+
 finishBtn.onclick = ()=>{
 
   if(!hasItems()){
@@ -624,10 +640,6 @@ if (clearBtn) {
     updateUI();
   });
 }
-
-
-
-
 
 
 
