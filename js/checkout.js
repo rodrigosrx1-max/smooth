@@ -563,11 +563,6 @@ window.open(url, '_blank');
 
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  updateUI();
-});
-
-
 console.log('JS carregou');
 
 
@@ -640,6 +635,7 @@ if (clearBtn) {
     updateUI();
   });
 }
+
 
 
 
