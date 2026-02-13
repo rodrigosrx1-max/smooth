@@ -4,7 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const sections = document.querySelectorAll("section[id]");
 
   function setActiveLink() {
-    const scrollPos = document.body.scrollTop + 140;
+
+    const scrollTop = document.body.scrollTop;
+    const windowHeight = window.innerHeight;
+    const scrollPos = scrollTop + windowHeight * 0.4; // ponto de leitura visual
 
     let currentSectionId = null;
 
@@ -17,15 +20,27 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    // =========================
+    // 🔴 REGRA ESPECIAL — FIM DA PÁGINA
+    // =========================
+    const atBottom =
+      scrollTop + windowHeight >= document.body.scrollHeight - 5;
+
+    if (atBottom) {
+      currentSectionId = "contato";
+    }
+
+    // =========================
+    // ATIVA LINK DO MENU
+    // =========================
     menuLinks.forEach(link => {
       link.classList.remove("active");
 
-      const href = link.getAttribute("href");
-
-      if (href === `#${currentSectionId}`) {
+      if (link.getAttribute("href") === `#${currentSectionId}`) {
         link.classList.add("active");
       }
     });
+
   }
 
   document.body.addEventListener("scroll", setActiveLink);
@@ -34,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // =========================
-  // UNDERLINE DOS TÍTULOS
+  // UNDERLINE DOS TÍTULOS (Observer)
   // =========================
 
   const sectionTitles = document.querySelectorAll('.section-title');
