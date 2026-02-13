@@ -362,7 +362,7 @@ body{
   z-index: 9999;   /* ← MUITO MAIOR */
   font-weight:700;
   letter-spacing:0.02em;
-  display:flex;
+  display:none;
   justify-content:space-between;
   align-items:center;
 
@@ -593,5 +593,6 @@ body{
 .clear-cart {
   display: none;
 }
+
 
 
