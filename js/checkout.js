@@ -47,19 +47,34 @@ document.addEventListener("DOMContentLoaded", () => {
   const checkoutEl = document.getElementById('checkout');
   const miniScroll = document.getElementById('miniScroll');
 
- function scrollToCheckout(){
+function scrollToCheckout(e){
+  e?.preventDefault();
+  e?.stopPropagation();
+
   if(!checkoutEl) return;
 
-  checkoutEl.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+  const headerOffset = 90;
+
+  const y = checkoutEl.getBoundingClientRect().top + window.pageYOffset - headerOffset;
+
+  document.documentElement.style.scrollBehavior = "auto";
+
+  window.scrollTo(0, y);
+
+  setTimeout(()=>{
+    document.documentElement.style.scrollBehavior = "";
+  }, 50);
 }
 
 
-  // evento desktop
-miniScroll?.addEventListener('click', scrollToCheckout);
+
+ miniScroll?.addEventListener('click', scrollToCheckout);
 mobileBtn?.addEventListener('click', scrollToCheckout);
+
+/* 🔴 FIX MOBILE REAL */
+mobileBtn?.addEventListener('touchend', scrollToCheckout);
+miniScroll?.addEventListener('touchend', scrollToCheckout);
+
 
 
 });
@@ -98,24 +113,24 @@ if (sentinel) {
     ([entry]) => {
       const hide = entry.isIntersecting;
 
+      // 🔴 NÃO mexe em opacity durante scroll
       if (miniCart) {
-        miniCart.style.opacity = hide ? '0' : '1';
-        miniCart.style.pointerEvents = hide ? 'none' : 'auto';
+        miniCart.style.display = hide ? 'none' : 'block';
       }
 
       if (mobileBtn) {
-        mobileBtn.style.opacity = hide ? '0' : '1';
+        mobileBtn.style.display = hide ? 'none' : 'flex';
       }
     },
     {
       root: null,
-      threshold: 0,
-      rootMargin: '-0px 0px 0px 0px' // só quando chega de verdade
+      threshold: 0.1
     }
   );
 
   observer.observe(sentinel);
 }
+
 
 
 
