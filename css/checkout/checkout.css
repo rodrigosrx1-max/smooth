@@ -1,598 +1,642 @@
-:root{
-  --rose:#EF9C9F;      /* Rosa principal Smooth */
-  --brown:#66403D;    /* Marrom base da marca */
-  --bg:#F7EFE6;       /* Fundo bege */
-  --muted:#c9b3b0;    /* Tom neutro */
-}
-
-/* =========================================================
-   RESET BÁSICO
-   ========================================================= */
-*{ 
-  box-sizing:border-box; /* Garante cálculo correto de largura/altura */
-}
-
-body{
-  margin:0;
-  font-family:Inter,Arial,sans-serif; /* Fonte base */
-  background:#f8d7cf;
-}
-
-/* =========================================================
-   CHECKOUT — ÁREA GERAL
-   ========================================================= */
-.sc-checkout{
-  background:var(--bg);      /* Fundo igual à seção de cookies */
-  padding:0.5rem 0rem;         /* Espaçamento vertical confortável */
-  color: #F7EFE6;
-   
+// ======================
+// CONSOLE VISUAL MOBILE (TEMPORÁRIO)
+// ======================
+function log(msg){
+  const el = document.createElement("div");
+  el.style.position = "fixed";
+  el.style.bottom = "0";
+  el.style.left = "0";
+  el.style.right = "0";
+  el.style.background = "black";
+  el.style.color = "lime";
+  el.style.padding = "8px";
+  el.style.zIndex = "99999";
+  el.style.fontSize = "12px";
+  el.textContent = msg;
+  document.body.appendChild(el);
 }
 
 
-/* =========================================================
-   CHECKOUT — CARD PRINCIPAL
-   ========================================================= */
-.checkout-card{
-  max-width:880px;           /* Largura desktop */
-  margin:0 auto;             /* Centraliza o card */
-  background: #F7EFE6;
-  border-radius:22px;
-  padding:1.8rem 1.4rem;     /* Espaçamento interno */
-  box-shadow:0 14px 34px rgba(0,0,0,.08);
+
+
+
+
+
+let miniCart, miniTotal, miniCount, mobileBtn;
+
+// ======================
+// ESTADO CENTRAL
+// ======================
+const cart = {};
+const DELIVERY_FEE = 10;
+let delivery = 0;
+let freeShipping = false;      // cupom frete
+let productCouponActive = false; // preparado (futuro)
+
+// ======================
+// ELEMENTOS
+// ======================
+
+
+const mobileTotal= document.getElementById('mobileTotal');
+
+const cartList   = document.getElementById('cartList');
+const subtotalEl = document.getElementById('subtotal');
+const deliveryEl = document.getElementById('delivery');
+const totalEl    = document.getElementById('total');
+
+const nameEl     = document.getElementById('clientName');
+const phoneEl    = document.getElementById('clientPhone');
+const notesEl    = document.getElementById('notes');
+const addressEl  = document.getElementById('address');
+
+const addressBlock = document.getElementById('addressBlock');
+const pickupBlock  = document.getElementById('pickupBlock');
+
+const changeBlock  = document.getElementById('changeBlock');
+const changeValue  = document.getElementById('changeValue');
+const clearBtn = document.getElementById("clearCart");
+
+
+// ======================
+// SCROLL PARA CHECKOUT — FIX REAL MOBILE
+// ======================
+document.addEventListener("DOMContentLoaded", () => {
+
+  miniCart   = document.getElementById('miniCart');
+  miniTotal  = document.getElementById('miniTotal');
+  miniCount  = document.getElementById('miniCount');
+  mobileBtn  = document.getElementById('mobileBtn');
+
+  const checkoutEl = document.getElementById('checkout');
+  const miniScroll = document.getElementById('miniScroll');
+
+  function scrollToCheckout(){
+
+    if(!checkoutEl) return;
+
+    const top = checkoutEl.offsetTop;
+
+    // 🔥 SCROLL NO ELEMENTO QUE REALMENTE ROLA
+    document.body.scrollTo({
+      top: top,
+      behavior: "smooth"
+    });
+
+  }
+
+  miniScroll?.addEventListener('click', scrollToCheckout);
+  mobileBtn?.addEventListener('click', scrollToCheckout);
+
+});
+
+
+
+// ======================
+// ESTADO INICIAL FORÇADO (ANTI-BUG)
+// ======================
+if (changeBlock) {
+  changeBlock.classList.add('sc-hidden');
 }
 
-/* Responsividade */
-@media (max-width:1024px){
-  .checkout-card{ max-width:720px; }
+if (changeValue) {
+  changeValue.classList.add('sc-hidden');
+  changeValue.value = '';
 }
-@media (max-width:768px){
-  .checkout-card{
-    max-width:100%;
-    border-radius:18px;
+
+
+
+
+const couponBlock  = document.getElementById('couponBlock');
+
+const finishBtn = document.getElementById('finishBtn');
+
+
+
+// ======================
+// OBSERVER — ESCONDE MINI CARTS AO CHEGAR NO CHECKOUT
+// ======================
+
+const sentinel = document.getElementById('checkout-sentinel');
+
+if (sentinel) {
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      const hide = entry.isIntersecting;
+
+      if (miniCart) {
+        miniCart.style.opacity = hide ? '0' : '1';
+        miniCart.style.pointerEvents = hide ? 'none' : 'auto';
+      }
+
+      if (mobileBtn) {
+        mobileBtn.style.opacity = hide ? '0' : '1';
+      }
+    },
+    {
+      root: null,
+      threshold: 0,
+      rootMargin: '-0px 0px 0px 0px' // só quando chega de verdade
+    }
+  );
+
+  observer.observe(sentinel);
+}
+
+
+
+
+
+// ======================
+// HELPERS
+// ======================
+const money = v => `R$ ${v.toFixed(2).replace('.',',')}`;
+const hasItems = () => Object.values(cart).reduce((a,i)=>a+i.qty,0) > 0;
+
+// ======================
+// UI UPDATE
+// ======================
+function updateUI(){
+  let subtotal = 0;
+  let items = 0;
+
+  
+
+
+  cartList.innerHTML = '';
+
+  for(const name in cart){
+    subtotal += cart[name].price * cart[name].qty;
+    items += cart[name].qty;
+  const li = document.createElement('li');
+
+li.textContent = `${cart[name].qty}x ${name} — ${money(cart[name].price)} (un)`;
+
+cartList.appendChild(li);
+
+  }
+
+  const deliveryValue = freeShipping ? 0 : delivery;
+
+subtotalEl.textContent = money(subtotal);
+totalEl.textContent = money(subtotal + deliveryValue);
+
+const deliveryLine = document.getElementById('deliveryLine');
+
+if (delivery > 0) {
+  deliveryEl.textContent = money(deliveryValue);
+  deliveryLine.classList.remove('sc-hidden');
+} else {
+  deliveryLine.classList.add('sc-hidden');
+}
+
+
+  miniTotal.textContent = totalEl.textContent;
+  miniCount.textContent = `${items} selecionado(s)`;
+  mobileTotal.textContent = totalEl.textContent;
+
+  const show = items > 0;
+  miniCart.style.display = show ? 'block' : 'none';
+  mobileBtn.style.display = show ? 'block' : 'none';
+
+
+// mostrar / esconder botão "Limpar itens"
+if (clearBtn) {
+  clearBtn.style.display = hasItems() ? "block" : "none";
+}
+
+
+
+  validate();
+}
+
+
+
+// ======================
+// PRODUTOS (+ / -) — UNIFICADO
+// ======================
+document.querySelectorAll('.cookie-card').forEach(card => {
+  const plusBtn = card.querySelector('.plus');
+  const minusBtn = card.querySelector('.minus');
+  const qtyEl = card.querySelector('.qty');
+
+  const name = card.dataset.name;
+  const price = +card.dataset.price;
+
+  plusBtn.onclick = () => {
+    cart[name] = cart[name] || { price, qty: 0 };
+    cart[name].qty++;
+    qtyEl.textContent = cart[name].qty;
+    updateUI();
+  };
+
+  minusBtn.onclick = () => {
+    if (!cart[name]) return;
+
+    cart[name].qty--;
+
+    if (cart[name].qty <= 0) {
+      delete cart[name];
+      qtyEl.textContent = 0;
+    } else {
+      qtyEl.textContent = cart[name].qty;
+    }
+
+    updateUI();
+  };
+});
+
+
+
+// ======================
+// RECEBIMENTO
+// ======================
+document.querySelectorAll('input[name="receive"]').forEach(r=>{
+  r.onchange = ()=>{
+    deliveryClicks = 0;               // 🔁 reset gesto secreto
+    couponBlock.classList.add('sc-hidden');
+
+    if(r.value === 'entrega'){
+      delivery = DELIVERY_FEE;
+      addressBlock.classList.remove('sc-hidden');
+      pickupBlock.classList.add('sc-hidden');
+    }else{
+      delivery = 0;
+      addressBlock.classList.add('sc-hidden');
+      pickupBlock.classList.remove('sc-hidden');
+      freeShipping = false;
+    }
+
+    updateUI();
+  };
+});
+
+// ======================
+// CUPOM FRETE — GESTO SECRETO
+// 5 cliques em "Entrega (+10,00)"
+// ======================
+
+let deliveryClicks = 0;
+
+document.querySelectorAll('input[name="receive"]').forEach(r=>{
+  r.addEventListener('click', ()=>{
+    // só conta clique se for entrega
+    if(r.value !== 'entrega') return;
+
+    // só conta se entrega estiver selecionada
+    if(!r.checked) return;
+
+    deliveryClicks++;
+
+    if(deliveryClicks === 5){
+      couponBlock.classList.remove('sc-hidden');
+    }
+  });
+});
+
+// ======================
+// PAGAMENTO / TROCO — VISIBILIDADE FINAL
+// ======================
+document.querySelectorAll('input[name="payment"]').forEach(r=>{
+  r.onchange = ()=>{
+    if (r.value === 'Dinheiro') {
+
+      // mostra a pergunta
+      changeBlock.classList.remove('sc-hidden');
+
+      // campo começa SEMPRE escondido
+      changeValue.classList.add('sc-hidden');
+      changeValue.value = '';
+
+      // limpa Sim / Não
+      document
+        .querySelectorAll('input[name="change"]')
+        .forEach(c => c.checked = false);
+
+    } else {
+      // se não for dinheiro, some tudo
+      changeBlock.classList.add('sc-hidden');
+      changeValue.classList.add('sc-hidden');
+      changeValue.value = '';
+
+      document
+        .querySelectorAll('input[name="change"]')
+        .forEach(c => c.checked = false);
+    }
+
+    validate();
+  };
+});
+
+
+
+
+// ======================
+// SIM / NÃO — TROCO
+// ======================
+document.querySelectorAll('input[name="change"]').forEach(r=>{
+  r.onchange = ()=>{
+    if (r.value === 'sim') {
+      changeValue.classList.remove('sc-hidden');
+    } else {
+      changeValue.classList.add('sc-hidden');
+      changeValue.value = '';
+    }
+
+    validate();
+  };
+});
+
+
+
+
+
+// ======================
+// CUPONS DE FRETE VÁLIDOS
+// ======================
+const FREE_SHIPPING_COUPONS = [
+  'GRATIS',
+  'MAITE',
+  'SOFIA',
+  'DRY',
+  'GUI'
+];
+
+
+
+
+// ======================
+// CUPOM FRETE (OCULTO)
+// ======================
+document.getElementById('applyCoupon')?.addEventListener('click',()=>{
+  const code = document.getElementById('coupon').value.trim().toUpperCase();
+  if (FREE_SHIPPING_COUPONS.includes(code)) {
+  freeShipping = true;
+  updateUI();
+  alert('Frete grátis aplicado.');
+} else {
+  alert('Cupom inválido.');
+}
+
+});
+
+
+// ======================
+// VALIDAÇÃO + BOTÃO MUTE
+// ======================
+function validate(){
+  let ok = true;
+
+  if(!hasItems()) ok=false;
+  if(!nameEl.value.trim()) ok=false;
+  if(!phoneEl.value.trim()) ok=false;
+
+  const receive = document.querySelector('input[name="receive"]:checked');
+  if(!receive) ok=false;
+
+  if(receive?.value==='entrega' && !addressEl.value.trim()) ok=false;
+
+  const pay = document.querySelector('input[name="payment"]:checked');
+if(!pay) ok = false;
+
+/* REGRA DINHEIRO + TROCO — CORRETA */
+if (pay && pay.value === 'Dinheiro') {
+
+  // se o bloco de troco ainda está escondido → inválido
+  if (changeBlock.classList.contains('sc-hidden')) {
+    ok = false;
+  } else {
+    const ch = document.querySelector('input[name="change"]:checked');
+
+    // não escolheu Sim ou Não
+    if (!ch) ok = false;
+
+    // escolheu Sim, mas não informou valor
+    if (ch && ch.value === 'sim' && !changeValue.value.trim()) {
+      ok = false;
+    }
   }
 }
 
-/* =========================================================
-   CHECKOUT — CARD (MOTION SUAVE AO HOVER)
-   ========================================================= */
 
-.checkout-card{
-  transition:
-    transform .25s ease,
-    box-shadow .25s ease;
+  finishBtn.classList.toggle('sc-muted', !ok);
+  return ok;
 }
 
-/* hover leve — sensação de profundidade */
-.checkout-card:hover{
-  transform: translateY(-4px);
-  box-shadow: 0 18px 42px rgba(0,0,0,.12);
-}
+[nameEl,phoneEl,notesEl,addressEl,changeValue].forEach(el=>{
+  el?.addEventListener('input',validate);
+});
 
-/* respeita usuários com redução de movimento */
-@media (prefers-reduced-motion: reduce){
-  .checkout-card{
-    transition: none;
+
+
+// ======================
+// ESTADO INICIAL — MINI CART (FIX ZERO ITEMS)
+// ======================
+document.addEventListener("DOMContentLoaded", () => {
+  updateUI();
+
+  const mc = document.getElementById('miniCart');
+  const mb = document.getElementById('mobileBtn');
+
+  if (mc) mc.style.display = "none";
+  if (mb) mb.style.display = "none";
+});
+
+
+finishBtn.onclick = ()=>{
+
+  if(!hasItems()){
+    alert('Adicione pelo menos um cookie ao pedido.');
+    return;
   }
-  .checkout-card:hover{
-    transform: none;
-    box-shadow: 0 14px 34px rgba(0,0,0,.08);
+
+  if(!nameEl.value.trim()){
+    alert('Informe seu nome.');
+    nameEl.focus();
+    return;
+  }
+
+  if(!phoneEl.value.trim()){
+    alert('Informe seu WhatsApp.');
+    phoneEl.focus();
+    return;
+  }
+
+  const receive = document.querySelector('input[name="receive"]:checked');
+  if(!receive){
+    alert('Escolha entrega ou retirada.');
+    return;
+  }
+
+  if(receive.value === 'entrega' && !addressEl.value.trim()){
+    alert('Informe o endereço para entrega.');
+    addressEl.focus();
+    return;
+  }
+
+  const pay = document.querySelector('input[name="payment"]:checked');
+  if(!pay){
+    alert('Escolha a forma de pagamento.');
+    return;
+  }
+
+  if(pay.value === 'Dinheiro'){
+    const ch = document.querySelector('input[name="change"]:checked');
+    if(!ch){
+      alert('Informe se precisa de troco.');
+      return;
+    }
+    if(ch.value === 'sim' && !changeValue.value.trim()){
+      alert('Informe o valor para o troco.');
+      changeValue.focus();
+      return;
+    }
+  }
+
+// ======================
+// MONTA MENSAGEM WHATSAPP — FINAL
+// ======================
+
+let msg = 'Pedido Smooth\n\n';
+
+msg += `Cliente: ${nameEl.value}\n`;
+msg += `WhatsApp: ${phoneEl.value}\n\n`;
+
+msg += 'Cookies selecionados:\n';
+
+let subtotal = 0;
+
+for (const n in cart) {
+  const qty = cart[n].qty;
+  const price = cart[n].price;
+  subtotal += qty * price;
+
+  msg += `${qty}x ${n} — ${money(price)} (un)\n`;
+}
+
+const deliveryValue = freeShipping ? 0 : delivery;
+
+msg += `Subtotal dos produtos: ${money(subtotal)}\n`;
+
+if (receive.value === 'entrega') {
+  msg += `Entrega: ${money(deliveryValue)}\n`;
+}
+
+msg += '---------------------------------------\n';
+msg += `Total do pedido: ${totalEl.textContent}\n`;
+
+msg += 'Valor sujeito à confirmação.\n\n';
+
+
+msg += `Forma de pagamento: ${pay.value}\n\n`;
+
+if (pay.value === 'Dinheiro') {
+  const ch = document.querySelector('input[name="change"]:checked');
+
+  if (ch && ch.value === 'sim') {
+    msg += `Troco para: R$ ${changeValue.value}\n\n`;
+  } else {
+    msg += 'Sem necessidade de troco\n\n';
   }
 }
 
 
-/* =========================================================
-   TÍTULOS
-   ========================================================= */
+msg += 'Forma de recebimento:\n';
 
-/* Título principal: "Seu pedido" */
-.checkout-card h3.section-title {
-  font-family: "Nexa Heavy", sans-serif;
-  font-size: clamp(1.6rem, 3vw, 2rem);
-  font-weight: 700;
+if (receive.value === 'entrega') {
+  msg += 'Entrega —\n';
+  msg += `${addressEl.value}\n`;
+} else {
+  msg += 'Retirada no local —\n';
+  msg += 'Rua Emidio Alves Feitosa, nº 1680\n';
+  msg += 'Bairro Agenor de Carvalho.\n';
+}
 
-  color: var(--brown);
+if (notesEl.value.trim()) {
+  msg += `\nObservações:\n${notesEl.value}\n`;
+}
 
-  padding-bottom: 0.6rem;        /* espaço para underline respirar */
-  margin-bottom: 1.6rem;
-  letter-spacing: -0.01em; /* micro ajuste óptico */
-  text-align: center;
+msg += '\nObrigado!';
 
-  
+const url = `https://wa.me/556932156921?text=${encodeURIComponent(msg)}`;
+window.open(url, '_blank');
+
+}
+
+console.log('JS carregou');
+
+
+// ======================
+// MINI CART — DRAG (DESKTOP)
+// ======================
+
+(function enableMiniCartDrag() {
+  if (window.innerWidth <= 768) return; // ❌ mobile não
+
+  const cart = document.getElementById('miniCart');
+  if (!cart) return;
+
+  let isDragging = false;
+  let startX, startY, startRight, startBottom;
+
+  cart.addEventListener('mousedown', (e) => {
+    // evita arrastar ao clicar em botões
+    if (e.target.closest('button')) return;
+
+    isDragging = true;
+    cart.style.transition = 'none';
+
+    startX = e.clientX;
+    startY = e.clientY;
+
+    const rect = cart.getBoundingClientRect();
+    startRight = window.innerWidth - rect.right;
+    startBottom = window.innerHeight - rect.bottom;
+
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    cart.style.right = `${startRight - dx}px`;
+    cart.style.bottom = `${startBottom - dy}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+
+    isDragging = false;
+    cart.style.transition = '';
+    document.body.style.userSelect = '';
+  });
+})();
+
+
+
+//=========================
+// Limpar Itens
+//=========================
+
+if (clearBtn) {
+  clearBtn.addEventListener("click", () => {
+    // 1. limpa estado lógico
+    Object.keys(cart).forEach(key => delete cart[key]);
+
+    // 2. zera contadores visuais
+    document.querySelectorAll('.cookie-card .qty').forEach(qty => {
+      qty.textContent = '0';
+    });
+
+    // 3. atualiza UI inteira
+    updateUI();
+  });
 }
 
 
-/* Subtítulos: "Seus dados", "Forma de pagamento" etc */
-.checkout-card h4{
-  text-align:center;
-  font-family:'Nexa Heavy',sans-serif;
-  font-size:.95rem;          /* ⬆ leve aumento */
-  color:var(--brown);
-  margin-bottom:1.8rem;
-}
-
-/* =========================================================
-   BLOCOS DE CONTEÚDO
-   ========================================================= */
-.sc-block{
-  margin-top:1.8rem;          /* Espaçamento padrão entre seções */
-  text-align:center;
-}
-
-/* =========================================================
-   INPUTS DE TEXTO
-   ========================================================= */
-#checkout input[type="text"],
-#checkout input[type="tel"],
-#checkout textarea{
-  width:100%;
-  max-width:420px;
-  margin:.65rem auto 0;
-  display:block;
-
-  border:1px solid rgba(102,64,61,.25);
-  border-radius:10px;
-  padding:.75rem .9rem;       /* ⬆ mais conforto */
-  font-size:.9rem;            /* ⬆ leve aumento */
-  background:#fff;
-  color:var(--brown);
-}
-
-/* Textarea */
-#checkout textarea{
-  min-height:90px;
-  resize:vertical;
-}
-
-/* Placeholder */
-#checkout input::placeholder,
-#checkout textarea::placeholder{
-  color:rgba(102,64,61,.55);
-  font-size:.8rem;
-}
-
-/* =========================
-   FOCO ROSA — INPUTS / TEXTAREA
-========================= */
-
-#checkout input:focus,
-#checkout textarea:focus {
-  outline: none; /* remove azul padrão do navegador */
-  border-color: var(--rose);
-
-  box-shadow:
-    0 0 0 3px rgba(239,156,159,.25); /* glow suave */
-}
-
-/* =========================
-   FOCO ROSA — RADIOS
-========================= */
-
-.radio-row input[type="radio"]:focus {
-  outline: none;
-  box-shadow:
-    0 0 0 3px rgba(239,156,159,.25);
-}
-
-/* =========================================================
-   LINHAS DE VALOR (Subtotal / Total)
-   ========================================================= */
-.sc-line{
-  display:flex;
-  justify-content:space-between;
-  font-size:.95rem;           /* ⬆ leve aumento */
-  margin:.6rem 0;
-  color:var(--brown);
-}
-
-.sc-line:has(#subtotal){
-  font-weight:700;
-}
-
-
-/* Taxa de entrega em NEGRITO */
-#deliveryLine{
-  font-weight:700;
-}
-
-
-/* Linha do Total */
-.sc-line.total{
-  margin-top:2rem;
-  padding-top:1.2rem;
-  border-top:1px dashed rgba(102,64,61,.25);
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size:1rem;
-}
-
-.total{
-  font-weight:700;
-}
-
-/* =========================================================
-   BOTÃO FINAL
-   ========================================================= */
-.sc-final-btn{
-  max-width:300px;
-  width:100%;
-  margin:2.4rem auto 0;
-  display:block;
-
-  background:#F7EFE6;
-  color:#F7EFE6;
-  border:none;
-  border-radius:10px;
-  padding:.75rem 1rem;
-
-  font-family:'Nexa Heavy',sans-serif;
-  font-size:.85rem;
-  cursor:pointer;
-}
-
-
-/* Estado desativado */
-.sc-final-btn.sc-muted{
-  opacity:.75;
-}
-
-
-.sc-final-btn:not(.sc-muted){
-  background: var(--brown);
-}
-
-/* =========================
-   BOTÃO FINAL — MOTION PADRÃO HOME
-========================= */
-
-.sc-final-btn{
-  transition:
-    background-color .2s ease,
-    transform .15s ease,
-    box-shadow .2s ease;
-}
-
-/* hover SOMENTE quando ativo */
-.sc-final-btn:not(.sc-muted):hover{
-  background-color: var(--brown);   /* troca de cor */
-  transform: translateY(-1px);      /* movimento leve */
-  /*box-shadow: 0 8px 18px rgba(0,0,0,.18);*/
-}
-
-/* clique */
-.sc-final-btn:not(.sc-muted):active{
-  transform: translateY(0);
-  /*box-shadow: 0 4px 10px rgba(0,0,0,.15);*/
-}
-
-/* =========================================================
-   RADIOS — TEXTO EM CIMA / BOLINHA EMBAIXO
-   ========================================================= */
-.radio-row{
-  display:flex;
-  justify-content:center;
-  gap:4rem;                   /* Distância entre opções */
-  margin-top:0.6rem;
-}
-
-/* Cada opção */
-.radio-row label{
-  display:flex;
-  flex-direction:column;      /* TEXTO EM CIMA */
-  align-items:center;
-  gap:.6rem;                  /* Distância texto ↔ bolinha */
-
-  font-family:Inter,Arial,sans-serif; /* ❌ sem negrito */
-  font-weight:400;            /* remove bold */
-  font-size:.9rem;            /* ⬆ leve aumento */
-  color:var(--brown);
-  cursor:pointer;
-}
-
-/* Bolinha */
-.radio-row input[type="radio"] {
-  appearance: none;
-  -webkit-appearance: none;
-
-  width: 24px;                 /* número par */
-  height: 24px;                /* número par */
-  border-radius: 50%;
-
-  border: 2px solid var(--rose); /* borda inteira = centro correto */
-  background: #F7EFE6;
-
-  position: relative;
-  margin-top:1.0rem;
-}
-
-/* Miolo */
-.radio-row input[type="radio"]::after {
-  content: "";
-  width: 12px;                 /* proporção correta */
-  height: 12px;
-  border-radius: 50%;
-
-  background: var(--rose);
-
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-
-  transition: transform .15s ease;
-}
-
-
-/* Estado marcado */
-.radio-row input[type="radio"]:checked::after{
-  transform:translate(-50%,-50%) scale(1);
-}
-
-
-/* =========================
-   TEXTAREA — CONTROLE DE TAMANHO
-========================= */
-
-#checkout textarea {
-  resize: vertical;     /* só cresce para baixo */
-  max-height: 220px;    /* limite visual elegante */
-}
-
-
-
-/* =========================================================
-   UTIL
-   ========================================================= */
-.sc-hidden {
-  display: none !important;
-}
-
-
-/* =========================================================
-   BOTÃO MOBILE — INTACTO
-   ========================================================= */
-.sc-mobile-btn{
-  position:fixed;
-  bottom:1rem;
-  left:1rem;
-  right:1rem;
-  padding:0.6rem;
-  border-radius:14px;
-  background:var(--rose);
-  color:#F7EFE6;
-  border:none;
-  z-index: 9999;   /* ← MUITO MAIOR */
-  font-weight:700;
-  letter-spacing:0.02em;
-  display:none;
-  justify-content:space-between;
-  align-items:center;
-
-  touch-action: manipulation;
-}
-/*------- espaço entre ver pedido e total no botao mobile-------*/
-#mobileTotal{
-  margin-left: 7px;
-}
-
-
-
-/* Regras de visibilidade */
-@media (max-width:768px){
-  .sc-mini-cart{ display:none!important; }
-}
-@media (min-width:769px){
-  .sc-mobile-btn{ display:none!important; }
-}
-
-/* =========================
-   CUPOM — ESPAÇAMENTO
-========================= */
-
-/* distância do input para o botão */
-#checkout #coupon{
-  margin-bottom: 1rem; /* aumente se quiser mais */
-}
-
-/* =========================
-   BOTÃO — APLICAR CUPOM (PADRÃO HOME)
-========================= */
-
-#checkout #applyCoupon{
-  display: block;
-  margin:  auto;
-
-  padding: .55rem 1.4rem;
-  border-radius: 10px;
-  border: none;
-
-  background: var(--rose);
-  color: #F7EFE6;
-
-  font-family: 'Nexa Heavy', sans-serif;
-  font-size: .8rem;
-
-  cursor: pointer;
-
-  transition:
-    background-color .2s ease,
-    transform .15s ease,
-    box-shadow .2s ease;
-}
-
-/* hover — mesmo padrão do botão principal */
-#checkout #applyCoupon:hover{
-  background-color: var(--brown);
-  transform: translateY(-1px);
-  /*box-shadow: 0 8px 18px rgba(0,0,0,.18);*/
-}
-
-/* clique */
-#checkout #applyCoupon:active{
-  transform: translateY(0);
-  /*box-shadow: 0 4px 10px rgba(0,0,0,.15);*/
-}
-
-/* FIX — largura correta do campo de troco */
-#checkout #changeValue{
-  max-width: 220px !important; /* força sobre o max-width global */
-  width: 100%;
-}
-
-
-
-/* FIX — espaço entre bolinhas e campo de troco */
-#checkout #changeBlock .radio-row{
-  margin-bottom: 1.6rem; /* ajuste fino aqui */
-  
-  
-}
-
-#cartList {
-  list-style: none;
-  padding: 0;
-  margin: 0 auto 1.2rem;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;   /* 🔑 centraliza os itens da lista*/
-  gap: 0.6rem;
-}
-
-#cartList li {
-  width: 100%;
-  max-width: 420px;      /* forma de texto da lista - mesma largura dos inputs */
-  text-align: center;
-  color: var(--brown);
-  font-size: 0.9rem;
-}
-
-.clear-cart {
-  background: none;
-  border: none;
-
-  margin: 0.6rem auto 1.2rem;
-  display: block;
-
-  font-family: 'Inter', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 500;
-
-  color: var(--rose);
-  cursor: pointer;
-
-  opacity: 0.8;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.clear-cart:hover {
-  opacity: 1;
-  transform: translateY(-1px);
-}
-
-
-/* =========================================================
-   MINI CART — DESKTOP (TIPOGRAFIA ALINHADA AO CHECKOUT)
-   ========================================================= */
-
-.sc-mini-cart{
-  position: fixed;
-  right: 1.5rem;
-  bottom: 1.5rem;
-
-  background: #F7EFE6;
-  padding: 1rem 1.1rem;
-  border-radius: 18px;
-
-  box-shadow: 0 10px 30px rgba(0,0,0,.15);
-  z-index: 999;
-
-  display: none;
-
-  /* 🔹 tipografia base igual ao checkout */
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: var(--brown);
-}
-
-/* Título "Resumo" */
-.sc-mini-header{
-  font-family: 'Nexa Heavy', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 0.25rem;
-}
-
-/* Contador de itens */
-.sc-mini-count{
-  font-size: 0.8rem;
-  font-weight: 400;
-  text-align: center;
-  opacity: 0.85;
-  margin-bottom: 0.5rem;
-}
-
-/* divisor */
-.sc-mini-divider{
-  height: 1px;
-  background: rgba(102,64,61,.2);
-  margin: 0.4rem 0 0.5rem;
-}
-
-/* Total */
-.sc-mini-total{
-  font-size: 0.95rem;          /* mesma escala do checkout */
-  font-weight: 700;            /* igual ao subtotal */
-  text-align: center;
-  margin-bottom: 0.4rem;
-}
-
-/* Texto "Total:" */
-.sc-mini-total::before{
-  content:"Total: ";
-  font-weight: 600;
-  color: var(--brown);
-}
-
-/* Link "Ver pedido" */
-.sc-mini-link{
-  font-family: 'Nexa Heavy', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-
-  color: var(--rose);
-  margin-top: 0.25rem;
-
-  cursor: pointer;
-  transition: transform .2s ease, opacity .2s ease;
-  display: block;          /* força ocupar a largura */
-  text-align: center;      /* centraliza o texto */
-  margin-left: auto;
-  margin-right: auto;
-}
-
-
-.sc-mini-link:hover{
-  transform: translateY(-1px);
-  opacity: .85;
-}
-
-
-.contact h3 {
-  margin-bottom: 0.4rem;
-}
-
-.contact p {
-  margin-top: 0;
-}
-
-
-
-
-
-/*---------------Limpar itens invisivel--------------*/
-
-.clear-cart {
-  display: none;
-}
 
 
 
