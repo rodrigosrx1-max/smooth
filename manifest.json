@@ -1,10 +1,10 @@
 {
-  "name": "Smooth3 — Bakehouse",
-  "short_name": "Smooth3",
+  "name": "Smooth4 — Bakehouse",
+  "short_name": "Smooth4",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f16b12",
-  "theme_color": "#a9f058",
+  "background_color": "#F7EFE6",
+  "theme_color": "#F7EFE6",
 
   "icons": [
     {
@@ -27,6 +27,7 @@
     }
   ]
 }
+
 
 
 
