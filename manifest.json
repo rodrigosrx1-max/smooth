@@ -3,8 +3,8 @@
   "short_name": "Smooth2",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#F7EFE6",
-  "theme_color": "#EF9C9F",
+  "background_color": "#f16b12",
+  "theme_color": "#a9f058",
 
   "icons": [
     {
@@ -27,4 +27,5 @@
     }
   ]
 }
+
 
