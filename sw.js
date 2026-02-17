@@ -1,4 +1,4 @@
-const CACHE_NAME = "smooth-cache-v8";
+const CACHE_NAME = "smooth-cache-v9";
 
 const FILES_TO_CACHE = [
   "/",
@@ -12,7 +12,7 @@ const FILES_TO_CACHE = [
 
   /* Ícones */
   "img/icons/icone-smooth1.png",
-  "img/icons/icone-maskable1.png"
+  "img/icons/icone-maskable2.png"
 ];
 
 
@@ -80,3 +80,4 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
