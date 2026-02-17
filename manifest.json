@@ -1,0 +1,29 @@
+{
+  "name": "Smooth1 — Bakehouse",
+  "short_name": "Smooth1",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#F7EFE6",
+  "theme_color": "#EF9C9F",
+
+  "icons": [
+    {
+      "src": "img/icons/icone-smooth1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "img/icons/icone-smooth1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "img/icons/icone-maskable1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
