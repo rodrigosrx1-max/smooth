@@ -1,6 +1,6 @@
 {
-  "name": "Smooth1 — Bakehouse",
-  "short_name": "Smooth1",
+  "name": "Smooth2 — Bakehouse",
+  "short_name": "Smooth2",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#F7EFE6",
@@ -20,10 +20,11 @@
       "purpose": "any"
     },
     {
-      "src": "img/icons/icone-maskable1.png",
+      "src": "img/icons/icone-maskable2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
   ]
 }
+
